@@ -346,7 +346,11 @@ __kernel void accumulate_noisy_data(
       //prev_frame_pixel.z = dot(prev_frame_camera_matrix.s26ae, world_position);
       prev_frame_uv /= dot(prev_frame_camera_matrix.s37bf, world_position);
       prev_frame_uv += 1.f;
-      prev_frame_uv /= 2.f;
+      prev_frame_uv *= 0.5f;
+#if FLIP_Y_FALCOR
+      // Flip for falcor data
+      prev_frame_uv.y = 1.f - prev_frame_uv.y;
+#endif
 
       // Change to pixel indexes and apply offset
       prev_frame_pixel_f = prev_frame_uv * (float2){IMAGE_WIDTH, IMAGE_HEIGHT};

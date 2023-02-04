@@ -36,12 +36,14 @@
 
 // ### Edit these defines if you have different input ###
 // TODO detect IMAGE_SIZES automatically from the input files
-#define IMAGE_WIDTH 1280
-#define IMAGE_HEIGHT 720
+#define IMAGE_WIDTH 1920
+#define IMAGE_HEIGHT 1080
 // TODO detect FRAME_COUNT from the input files
-#define FRAME_COUNT 60
+#define FRAME_COUNT 101
+// Flip y axis when calculating uv (for Falcor input data)
+#define FLIP_Y_FALCOR 1
 // Location where input frames and feature buffers are located
-#define INPUT_DATA_PATH ../data/frames
+#define INPUT_DATA_PATH ../data/arcade/inputs
 #define INPUT_DATA_PATH_STR STR(INPUT_DATA_PATH)
 // camera_matrices.h is expected to be in the same folder
 #include STR(INPUT_DATA_PATH/camera_matrices.h)
@@ -145,7 +147,7 @@ struct Operation_result
 Operation_result read_image_file(
     const std::string &file_name, const int frame, float *buffer)
 {
-    OpenImageIO::ImageInput *in = OpenImageIO::ImageInput::open(
+    auto in = OIIO::ImageInput::open(
         file_name + std::to_string(frame) + ".exr");
     if (!in || in->spec().width != IMAGE_WIDTH ||
         in->spec().height != IMAGE_HEIGHT || in->spec().nchannels != 3)
@@ -156,7 +158,7 @@ Operation_result read_image_file(
 
     // NOTE: this converts .exr files that might be in halfs to single precision floats
     // In the dataset distributed with the BMFR paper all exr files are in single precision
-    in->read_image(OpenImageIO::TypeDesc::FLOAT, buffer);
+    in->read_image(OIIO::TypeDesc::FLOAT, buffer);
     in->close();
 
     return {true};
@@ -207,6 +209,7 @@ int tasks()
         " -D BUFFER_COUNT=" << buffer_count <<
         " -D FEATURES_NOT_SCALED=" << features_not_scaled_count <<
         " -D FEATURES_SCALED=" << features_scaled_count <<
+        " -D FLIP_Y_FALCOR=" << STR(FLIP_Y_FALCOR) <<
         " -D IMAGE_WIDTH=" << IMAGE_WIDTH <<
         " -D IMAGE_HEIGHT=" << IMAGE_HEIGHT <<
         " -D WORKSET_WIDTH=" << WORKSET_WIDTH <<
@@ -525,15 +528,15 @@ int tasks()
             continue;
 
         // Output image
-        std::string output_file_name = OUTPUT_FILE_NAME + std::to_string(frame) + ".png";
+        std::string output_file_name = OUTPUT_FILE_NAME + std::to_string(frame) + ".exr";
         // Crops back from WORKSET_SIZE to IMAGE_SIZE
-        OpenImageIO::ImageSpec spec(IMAGE_WIDTH, IMAGE_HEIGHT, 3,
-                                    OpenImageIO::TypeDesc::FLOAT);
-        std::unique_ptr<OpenImageIO::ImageOutput>
-            out(OpenImageIO::ImageOutput::create(output_file_name));
+        OIIO::ImageSpec spec(IMAGE_WIDTH, IMAGE_HEIGHT, 3,
+                                    OIIO::TypeDesc::FLOAT);
+        std::unique_ptr<OIIO::ImageOutput>
+            out(OIIO::ImageOutput::create(output_file_name));
         if (out && out->open(output_file_name, spec))
         {
-            out->write_image(OpenImageIO::TypeDesc::FLOAT, out_data[frame].data(),
+            out->write_image(OIIO::TypeDesc::FLOAT, out_data[frame].data(),
                              3 * sizeof(cl_float), WORKSET_WIDTH * 3 * sizeof(cl_float), 0);
             out->close();
         }
