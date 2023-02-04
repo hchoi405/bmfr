@@ -43,15 +43,15 @@
 // Flip y axis when calculating uv (for Falcor input data)
 #define FLIP_Y_FALCOR 1
 // Location where input frames and feature buffers are located
-#define INPUT_DATA_PATH ../data/arcade/inputs
+#define INPUT_DATA_PATH /media/hchoi/extra/arcade_anim
 #define INPUT_DATA_PATH_STR STR(INPUT_DATA_PATH)
 // camera_matrices.h is expected to be in the same folder
 #include STR(INPUT_DATA_PATH/camera_matrices.h)
 // These names are appended with NN.exr, where NN is the frame number
-#define NOISY_FILE_NAME INPUT_DATA_PATH_STR"/color"
-#define NORMAL_FILE_NAME INPUT_DATA_PATH_STR"/shading_normal"
-#define POSITION_FILE_NAME INPUT_DATA_PATH_STR"/world_position"
-#define ALBEDO_FILE_NAME INPUT_DATA_PATH_STR"/albedo"
+#define NOISY_FILE_NAME INPUT_DATA_PATH_STR"/current_"
+#define NORMAL_FILE_NAME INPUT_DATA_PATH_STR"/normal_"
+#define POSITION_FILE_NAME INPUT_DATA_PATH_STR"/position_"
+#define ALBEDO_FILE_NAME INPUT_DATA_PATH_STR"/albedo_"
 #define OUTPUT_FILE_NAME "outputs/output"
 
 
@@ -147,8 +147,10 @@ struct Operation_result
 Operation_result read_image_file(
     const std::string &file_name, const int frame, float *buffer)
 {
+    char num_str[5];
+    sprintf(num_str, "%04d", frame);
     auto in = OIIO::ImageInput::open(
-        file_name + std::to_string(frame) + ".exr");
+        file_name + std::string(num_str) + ".exr");
     if (!in || in->spec().width != IMAGE_WIDTH ||
         in->spec().height != IMAGE_HEIGHT || in->spec().nchannels != 3)
     {
