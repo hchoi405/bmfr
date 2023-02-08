@@ -854,10 +854,11 @@ __kernel void accumulate_filtered_data(
 
    // Remodulate albedo and tone map
    float3 my_albedo = load_float3(albedo, linear_pixel);
-   const float3 tone_mapped_color = clamp(
-      powr(max(0.f, my_albedo * accumulated_color), 0.454545f), 0.f, 1.f);
+   // const float3 tone_mapped_color = clamp(
+   //    powr(max(0.f, my_albedo * accumulated_color), 0.454545f), 0.f, 1.f);
+   const float3 modulated_color = max(0.f, my_albedo * accumulated_color);
 
-   store_float3(tone_mapped_frame, linear_pixel, tone_mapped_color);
+   store_float3(tone_mapped_frame, linear_pixel, modulated_color);
 }
 
 
@@ -974,5 +975,5 @@ __kernel void taa(
 
    float3 result_color = TAA_BLEND_ALPHA * my_new_color +
       (1.f - TAA_BLEND_ALPHA) * prev_color_rgb;
-   store_float3(result_frame, linear_pixel, result_color);
+   store_float3(result_frame, linear_pixel, max(0.f, result_color));
 }
