@@ -52,7 +52,7 @@
 #define NORMAL_FILE_NAME INPUT_DATA_PATH_STR"/normal_"
 #define POSITION_FILE_NAME INPUT_DATA_PATH_STR"/position_"
 #define ALBEDO_FILE_NAME INPUT_DATA_PATH_STR"/albedo_"
-#define OUTPUT_FILE_NAME "outputs/output"
+#define OUTPUT_FILE_NAME "outputs/output_"
 
 
 // ### Edit these defines if you want to experiment different parameters ###
@@ -530,7 +530,9 @@ int tasks()
             continue;
 
         // Output image
-        std::string output_file_name = OUTPUT_FILE_NAME + std::to_string(frame) + ".exr";
+        char numbers[10];
+        sprintf(numbers, "%04d", frame);
+        std::string output_file_name = OUTPUT_FILE_NAME + std::string(numbers) + ".exr";
         // Crops back from WORKSET_SIZE to IMAGE_SIZE
         OIIO::ImageSpec spec(IMAGE_WIDTH, IMAGE_HEIGHT, 3,
                                     OIIO::TypeDesc::FLOAT);
