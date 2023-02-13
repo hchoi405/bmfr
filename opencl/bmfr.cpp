@@ -52,8 +52,8 @@
 #define NORMAL_FILE_NAME INPUT_DATA_PATH_STR"/normal_"
 #define POSITION_FILE_NAME INPUT_DATA_PATH_STR"/position_"
 #define ALBEDO_FILE_NAME INPUT_DATA_PATH_STR"/albedo_"
-#define OUTPUT_FILE_NAME "outputs/output_"
-
+#define OUTPUT_FILE_NAME "outputs/bmfr_"
+    
 
 // ### Edit these defines if you want to experiment different parameters ###
 // The amount of noise added to feature buffers to cancel sigularities
