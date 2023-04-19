@@ -185,6 +185,6 @@ for scene in scenes:
             subprocess.run(["ssh", "nas", f"mkdir -p bmfr/outputs/{dirname}"])
 
             # Move all files through rsync and remove original files in asynchronous process
-            subprocess.Popen(["rsync", "-av", "--remove-source-files", f"outputs/{dirname}/", f"nas:bmfr/outputs/{dirname}/"])
+            subprocess.Popen(["rsync", "-av", "--remove-source-files", f"outputs/{dirname}/", f"/home/hchoi/nas/bmfr/outputs/{dirname}/"])
 
             continue
