@@ -1,0 +1,4 @@
+losses/
+data/
+opencl/build/
+opencl/outputs*/
