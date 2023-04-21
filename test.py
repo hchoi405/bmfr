@@ -181,8 +181,9 @@ for scene in scenes:
                     os.rename(f"outputs/bmfr_{i:04d}.exr",
                               f"outputs/{dirname}/bmfr_{i:04d}.exr")
 
-            # Make sure the directory exists in the NAS
-            subprocess.run(["ssh", "nas", f"mkdir -p bmfr/outputs/{dirname}"])
+            # Make sure the directory exists in /home/hchoi/nas
+            if not os.path.exists(f"/home/hchoi/nas/bmfr/outputs/{dirname}"):
+                os.makedirs(f"/home/hchoi/nas/bmfr/outputs/{dirname}")
 
             # Move all files through rsync and remove original files in asynchronous process
             subprocess.Popen(["rsync", "-av", "--remove-source-files", f"outputs/{dirname}/", f"/home/hchoi/nas/bmfr/outputs/{dirname}/"])

@@ -5,6 +5,7 @@ import parmap
 from functools import partial
 from skimage.metrics import structural_similarity
 import glob
+import itertools
 
 scenes = [
     ("data_Arcade", 103),
@@ -13,7 +14,7 @@ scenes = [
     ("data_Classroom", 603),
     ("data_Dining-room", 103),
     ("data_Dining-room-dynamic", 140),
-    ("data_Staircase", 453)
+    ("data_Staircase", 450)
 ]
 positions = [0.01, 0.03, 0.04, 0.1, 0.5, 1.0, 2.0]
 normals = [0.01, 0.1, 0.2, 0.5, 1.0, 2.0]
@@ -54,71 +55,79 @@ def process_frame(scene, max_frames, position, normal, frame, loss_fn):
     frame_path = f'/home/hchoi/nas/bmfr/outputs/{scene}/{position:.6f}_{normal:.6f}/bmfr_{frame:04d}.exr'
     ref_path = f'/media/hchoi/extra/{scene}/ref_modul_{frame:04d}.exr'
     
-    frame_img = exr.read_all(os.path.expanduser(frame_path))['default']
+    frame_img = exr.read_all(frame_path)['default']
     ref_img = exr.read_all(ref_path)['default']
     
     return loss_fn(ref_img, frame_img)
 
-def find_best_params_for_scene(scene, max_frames, loss_fn):
-    best_params = None
-    best_loss = float('inf')
-    best_losses = {}
-    # Min, max, mean and std
-    min_loss = float('inf')
-    max_loss = float('-inf')
-    mean_loss = 0
-    std_loss = 0
-    avg_losses = []
+def find_best_params_for_loss(loss_fn):
+    scene_losses = {}
+    for scene, max_frames in scenes:
+        scene_losses[scene] = {}
+        param_losses = []
 
-    for position in positions:
-        for normal in normals:
+        # Iterate position and normal combinations by permute
+        for position, normal in itertools.product(positions, normals):
+            # print(f'{scene} {pos**2:.6f} {norm**2:.6f}')
+            position = position ** 2
+            normal = normal ** 2
+            key = f'{position:.6f}_{normal:.6f}'
+
+            regenerate = False
             dir = f'losses/{scene}/{loss_fn.__name__}'
             os.makedirs(dir, exist_ok=True)
-            loss_path = f'{dir}/{position**2:.6f}_{normal**2:.6f}_*.txt'
-            # Check if whether the loss file exists
-            if len(glob.glob(loss_path)) > 0:
-                # If exists, load the loss
-                with open(glob.glob(loss_path)[0], 'r') as f:
+            loss_path = f'{dir}/{key}.txt'
+            if os.path.exists(loss_path):
+                with open(loss_path, 'r') as f:
                     losses = [float(line) for line in f.readlines()]
+                if len(losses) != max_frames:
+                    regenerate = True
                 avg_loss = np.mean(losses)
-                avg_losses.append(avg_loss)
-                
+                param_losses.append({key: avg_loss})
             else:
-                # Or calculate the loss
-                process_frame_partial = partial(process_frame, scene, max_frames, position**2, normal**2, loss_fn=loss_fn)
+                regenerate = True
+            
+            if regenerate:
+                process_frame_partial = partial(process_frame, scene, max_frames, position, normal, loss_fn=loss_fn)
                 losses = parmap.map(process_frame_partial, range(0, max_frames), pm_processes=20, pm_pbar=True)
                 avg_loss = np.mean(losses)
-                avg_losses.append(avg_loss)
+                param_losses.append({(position, normal), avg_loss})
                 # Save losses to file
-                with open(f'{dir}/{position**2:.6f}_{normal**2:.6f}_{avg_loss:.6f}.txt', 'w') as f:
+                with open(f'{dir}/{position:.6f}_{normal:.6f}.txt', 'w') as f:
                     for loss in losses:
                         f.write(f'{loss}\n')
-
-            if avg_loss < best_loss:
-                best_loss = avg_loss
-                best_params = (position**2, normal**2)
-                best_losses = {frame: loss for frame, loss in enumerate(losses) if frame % 50 == 0}
-    
-    min_loss = np.min(avg_losses)
-    max_loss = np.max(avg_losses)
-    mean_loss = np.mean(avg_losses)
-    std_loss = np.std(avg_losses)
-
-    return {
-        "params": best_params,
-        "loss": best_loss,
-        "stats": {"min": min_loss, "max": max_loss, "mean": mean_loss, "std": std_loss},
-        "losses_by_frame": best_losses
-    }
-
+        params = [list(param.keys())[0] for param in param_losses]
+        avg_losses = [list(val.values())[0] for val in param_losses]
+        # print(losses)
+        if loss_fn == ssim_loss or loss_fn == psnr_loss:
+            best_idx = np.argmax(avg_losses)
+        else:
+            best_idx = np.argmin(avg_losses)
+        scene_losses[scene]['avg'] = avg_losses
+        scene_losses[scene]['param_losses'] = param_losses
+        scene_losses[scene]['best_params'] = params[best_idx]
+        scene_losses[scene]['best_loss'] = avg_losses[best_idx]
+    return scene_losses
 
 if __name__ == "__main__":
-    for scene, max_frames in scenes:
-        loss_fns = [mse_loss, relmse_loss, ssim_loss, psnr_loss, smape_loss]
-        for loss_fn in loss_fns:
-            res = find_best_params_for_scene(scene, max_frames, loss_fn=loss_fn)
-            print(f"[{scene}, {loss_fn.__name__}] loss: Position {res['params'][0]:.6f}, Normal {res['params'][1]:.6f}, Loss {res['loss']:.6f}")
-            print(f'\tMin: {res["stats"]["min"]:.6f}, Max: {res["stats"]["max"]:.6f}, Mean: {res["stats"]["mean"]:.6f}, Std: {res["stats"]["std"]:.6f}')
+    loss_fns = [mse_loss, relmse_loss, ssim_loss, psnr_loss, smape_loss]
+    for loss_fn in loss_fns:
+        print(f'{loss_fn.__name__}:')
+        scene_losses = find_best_params_for_loss(loss_fn=loss_fn)
+        for scene, max_frames in scenes:
+            avg_loss = np.mean(scene_losses[scene]['avg'])
+            min_loss = np.min(scene_losses[scene]['avg'])
+            max_loss = np.max(scene_losses[scene]['avg'])
+            std_loss = np.std(scene_losses[scene]['avg'])
+            best_params = scene_losses[scene]['best_params']
+            best_loss = scene_losses[scene]['best_loss']
+            print(f'Scene {scene}:')
+            print(f'\tBest position_normal: {best_params}')
+            print(f'\tBest loss: {best_loss:.6f}')
+            print(f'\tavg loss: {avg_loss:.6f}')
+            print(f'\tmin loss: {min_loss:.6f}')
+            print(f'\tmax loss: {max_loss:.6f}')
+            print(f'\tstd loss: {std_loss:.6f}')
         print(f'')
 
        
