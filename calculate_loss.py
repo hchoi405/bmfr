@@ -48,15 +48,24 @@ def psnr_loss(y_true, y_pred):
     return -10 * np.log10(mse)
 
 def ssim_loss(y_true, y_pred):
+    # HDR -> LDR
+    y_true = tone_mapping(y_true)
+    y_pred = tone_mapping(y_pred)
+
     val = structural_similarity(y_true, y_pred, channel_axis=2, data_range=y_pred.max() - y_pred.min())
     return val
 
+img_cache = {}
 def process_frame(scene, max_frames, position, normal, frame, loss_fn):
     frame_path = f'/home/hchoi/nas/bmfr/outputs/{scene}/{position:.6f}_{normal:.6f}/bmfr_{frame:04d}.exr'
     ref_path = f'/media/hchoi/extra/{scene}/ref_modul_{frame:04d}.exr'
-    
-    frame_img = exr.read_all(frame_path)['default']
-    ref_img = exr.read_all(ref_path)['default']
+
+    if frame_path not in img_cache:
+        img_cache[frame_path] = exr.read_all(frame_path)['default']
+    if ref_path not in img_cache:
+        img_cache[ref_path] = exr.read_all(ref_path)['default']
+    frame_img = img_cache[frame_path]
+    ref_img = img_cache[ref_path]
     
     return loss_fn(ref_img, frame_img)
 
@@ -91,7 +100,7 @@ def find_best_params_for_loss(loss_fn):
                 process_frame_partial = partial(process_frame, scene, max_frames, position, normal, loss_fn=loss_fn)
                 losses = parmap.map(process_frame_partial, range(0, max_frames), pm_processes=20, pm_pbar=True)
                 avg_loss = np.mean(losses)
-                param_losses.append({(position, normal), avg_loss})
+                param_losses.append({key: avg_loss})
                 # Save losses to file
                 with open(f'{dir}/{position:.6f}_{normal:.6f}.txt', 'w') as f:
                     for loss in losses:
