@@ -16,19 +16,19 @@ os.chdir("opencl")
 
 PREFIX = "#define INPUT_DATA_PATH "
 scenes = [
-    ("data_Arcade", 103),
-    ("data_BistroExterior", 103),
-    ("data_BistroExterior2", 103),
-    ("data_Classroom", 603),
-    ("data_Dining-room", 103),
-    ("data_Dining-room-dynamic", 140),
-    ("data_Staircase", 453)
+    ("data_Arcade", 301),
+    # # ("data_BistroExterior", 103),
+    # ("data_BistroExterior2", 301),
+    # ("data_Classroom", 301),
+    # # ("data_Dining-room", 301),
+    # # ("data_Dining-room-dynamic", 140),
+    # ("data_Staircase", 301)
 ]
-directory_string = "/media/hchoi/extra"
+directory_string = "/media/hchoi/extra/dataset_new/"
+dst_dir = "/home/hchoi/nas/bmfr"
 
-# Define an empty array to hold the values
-positions = [0.01, 0.03, 0.04, 0.1, 0.5, 1.0, 2.0]
-normals = [0.01, 0.1, 0.2, 0.5, 1.0, 2.0]
+positions = [0.01]#, 0.03, 0.04, 0.1, 0.5, 1.0, 2.0]
+normals = [0.01]#, 0.1, 0.2, 0.5, 1.0, 2.0]
 
 
 def mse_loss(y_true, y_pred):
@@ -113,7 +113,7 @@ for scene in scenes:
 
     frame_count = scene[1]
 
-    new_directory = f"{directory_string}/{scene[0]}"
+    new_directory = os.path.join(directory_string, scene[0])
 
     # Change scene
     new_code = f"{PREFIX}{new_directory}"
@@ -169,7 +169,7 @@ for scene in scenes:
 
             # no output
             subprocess.run(["make"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.run(["./bmfr"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(["./bmfr"])
 
             # Move all output exr files in outputs to a new directory
             dirname = f"{scene[0]}/{position_s:.6f}_{normal_s:.6f}"
@@ -182,10 +182,13 @@ for scene in scenes:
                               f"outputs/{dirname}/bmfr_{i:04d}.exr")
 
             # Make sure the directory exists in /home/hchoi/nas
-            if not os.path.exists(f"/home/hchoi/nas/bmfr/outputs/{dirname}"):
-                os.makedirs(f"/home/hchoi/nas/bmfr/outputs/{dirname}")
+            if not os.path.exists(f"{dst_dir}/outputs/{dirname}"):
+                os.makedirs(f"{dst_dir}/outputs/{dirname}")
 
             # Move all files through rsync and remove original files in asynchronous process
-            subprocess.Popen(["rsync", "-av", "--remove-source-files", f"outputs/{dirname}/", f"/home/hchoi/nas/bmfr/outputs/{dirname}/"])
+            subprocess.Popen(["rsync", 
+                              "-avh", "--info=progress2", "--remove-source-files", 
+                              "--no-o", "--no-g", "--no-perms", 
+                              f"outputs/{dirname}/", f"{dst_dir}/outputs/{dirname}/"])
 
             continue

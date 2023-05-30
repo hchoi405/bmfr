@@ -9,12 +9,12 @@ import itertools
 
 scenes = [
     ("data_Arcade", 103),
-    ("data_BistroExterior", 103),
+    # ("data_BistroExterior", 103),
     ("data_BistroExterior2", 103),
-    ("data_Classroom", 603),
+    ("data_Classroom", 103),
     ("data_Dining-room", 103),
-    ("data_Dining-room-dynamic", 140),
-    ("data_Staircase", 450)
+    # ("data_Dining-room-dynamic", 103),
+    ("data_Staircase", 103)
 ]
 positions = [0.01, 0.03, 0.04, 0.1, 0.5, 1.0, 2.0]
 normals = [0.01, 0.1, 0.2, 0.5, 1.0, 2.0]
@@ -86,17 +86,22 @@ def find_best_params_for_loss(loss_fn):
             dir = f'losses/{scene}/{loss_fn.__name__}'
             os.makedirs(dir, exist_ok=True)
             loss_path = f'{dir}/{key}.txt'
+            # print(loss_path)
             if os.path.exists(loss_path):
                 with open(loss_path, 'r') as f:
                     losses = [float(line) for line in f.readlines()]
-                if len(losses) != max_frames:
+                if len(losses) < max_frames:
+                    print(f'Loss file is not complete. {scene} {position:.6f} {normal:.6f}')
                     regenerate = True
+                elif len(losses) > max_frames:
+                    losses = losses[:max_frames]
                 avg_loss = np.mean(losses)
                 param_losses.append({key: avg_loss})
             else:
                 regenerate = True
             
             if regenerate:
+                print(f'Regenerating... {scene} {position:.6f} {normal:.6f}')
                 process_frame_partial = partial(process_frame, scene, max_frames, position, normal, loss_fn=loss_fn)
                 losses = parmap.map(process_frame_partial, range(0, max_frames), pm_processes=20, pm_pbar=True)
                 avg_loss = np.mean(losses)

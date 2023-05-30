@@ -39,16 +39,17 @@
 #define IMAGE_WIDTH 1920
 #define IMAGE_HEIGHT 1080
 // TODO detect FRAME_COUNT from the input files
-#define FRAME_COUNT 101
+#define FRAME_COUNT 140
 // Flip y axis when calculating uv (for Falcor input data)
 #define FLIP_Y_FALCOR 1
 // Location where input frames and feature buffers are located
-#define INPUT_DATA_PATH /media/hchoi/extra/arcade_anim
+#define INPUT_DATA_PATH /media/hchoi/extra/dataset_new/data_Dining-room-dynamic
 #define INPUT_DATA_PATH_STR STR(INPUT_DATA_PATH)
 // camera_matrices.h is expected to be in the same folder
 #include STR(INPUT_DATA_PATH/camera_matrices.h)
 // These names are appended with NN.exr, where NN is the frame number
-#define NOISY_FILE_NAME INPUT_DATA_PATH_STR"/current_"
+#define ACCUM_FILE_NAME INPUT_DATA_PATH_STR"/accum_demodul_"
+#define NOISY_FILE_NAME INPUT_DATA_PATH_STR"/current_demodul_"
 #define NORMAL_FILE_NAME INPUT_DATA_PATH_STR"/normal_"
 #define POSITION_FILE_NAME INPUT_DATA_PATH_STR"/position_"
 #define ALBEDO_FILE_NAME INPUT_DATA_PATH_STR"/albedo_"
