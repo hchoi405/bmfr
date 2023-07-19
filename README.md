@@ -1,3 +1,12 @@
+# Installation
+
+Install OpenImageIO
+`sudo apt install libopenimageio-dev`
+
+Install OpenCL
+`sudo apt install ocl-icd-opencl-dev`
+
+
 # Blockwise Multi-Order Feature Regression for Real-Time Path Tracing Reconstruction
 
 This is the code used in the paper:
