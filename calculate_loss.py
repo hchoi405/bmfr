@@ -14,6 +14,7 @@ def mse_loss(img1, img2):
     return np.mean((img1 - img2) ** 2)
 
 def relmse_loss(y_true, y_pred):
+    y_true = np.clip(y_true, 0, None)  # non-negative
     y_pred = np.clip(y_pred, 0, None)
     true_mean = np.mean(y_true, axis=2, keepdims=True)
     return np.average(np.square(y_pred - y_true) / (np.square(true_mean) + 1e-2))

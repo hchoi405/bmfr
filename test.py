@@ -14,38 +14,19 @@ os.chdir("opencl")
 
 PREFIX = "#define INPUT_DATA_PATH "
 scenes = [
-    ("BistroExterior2", 101), # Done
+    # ("BistroExterior2", 101), # Done
     # ("BistroExteriorDynamic", 101),
     # ("EmeraldSquare2", 101),
     # ("classroom", 101),
-    # ("staircase", 101),
+    ("musicroom21", 101),
 ]
 TEST_COUNT = scenes[0][1]
-dataset_dir = "/home/hchoi/nas/dataset_newscene_2spp_final/"
+dataset_dir = "/home/hchoi/nas/dataset_newscene/"
 dst_dir = "/home/hchoi/nas/bmfr"
-losses_dir = '/home/hchoi/repositories/bmfr/losses'
+losses_dir = "/home/hchoi/nas/bmfr/losses"
 
 positions = [0.01, 0.03, 0.04, 0.1, 0.5, 1.0, 2.0]
 normals = [0.01, 0.1, 0.2, 0.5, 1.0, 2.0]
-
-def make_path2spp_illum(input_dir, scene, frame):
-    target_path = os.path.join(input_dir, scene, f"path2spp_illum_{frame:04d}.exr")
-    if os.path.exists(target_path):
-        return
-    
-    current1_path = os.path.join(input_dir, scene, f"current_{frame:04d}.exr")
-    current2_path = os.path.join(input_dir, scene, f"current2_{frame:04d}.exr")
-    albedo_path = os.path.join(input_dir, scene, f"albedo_{frame:04d}.exr")
-    
-    current1 = exr.read_all(current1_path)['default']
-    current2 = exr.read_all(current2_path)['default']
-    albedo = exr.read_all(albedo_path)['default']
-
-    current1 /= np.maximum(albedo, 0.001)
-    current2 /= np.maximum(albedo, 0.001)
-    path2spp = current1 + current2
-
-    exr.write(target_path, path2spp)
 
 for scene in scenes:
     print(f"Processing {scene[0]}...")
@@ -59,16 +40,6 @@ for scene in scenes:
 
     frame_count = scene[1]
     input_directory = os.path.join(dataset_dir, scene[0])
-
-    # Check if path2spp_illum_%04d.exr exist for all frames
-    for i in range(frame_count):
-        if not os.path.exists(f"{input_directory}/path2spp_illum_{i:04d}.exr"):
-            print(f"Missing: {input_directory}/path2spp_illum_{i:04d}.exr")
-            print("Generating path2spp_illum_%04d.exr files...", end="")
-            with mp.Pool(processes=min(60, mp.cpu_count())) as pool:
-                pool.starmap(make_path2spp_illum, [(dataset_dir, scene[0], i) for i in range(frame_count)])
-            print("Done.")
-            break
 
     # Change scene
     new_code = f"{PREFIX}{input_directory}"
@@ -154,7 +125,8 @@ for scene in scenes:
                               f"outputs/{dirname}/", dst_path], check=True)
 
     # Calculate errors
-    loss_fns = [relmse_loss, ssim_loss, psnr_loss, FLIP]
+    # loss_fns = [relmse_loss, ssim_loss, psnr_loss, FLIP]
+    loss_fns = [relmse_loss, ssim_loss]
     for scene, max_frames in scenes:
         print(f"Calculating errors for {scene}...")
         for loss_fn in loss_fns:
