@@ -16,25 +16,28 @@ os.chdir("opencl")
 
 PREFIX = "#define INPUT_DATA_PATH "
 scenes = [
-    # ("data_Arcade", 301),
-    # # ("data_BistroExterior", 103),
-    ("data_BistroExterior2", 301),
-    ("data_Classroom", 301),
-    ("data_Dining-room", 301),
-    # ("data_Dining-room-dynamic", 140),
-    ("data_Staircase", 301)
+    # ("BistroExteriorDoF", 101),
+    # ("BistroExterior2", 301),
+    # ("BistroExteriorDynamic", 301),
+    # ("EmeraldSquare2", 301),
+    # ("staircase", 301),
+    # ("musicroom22", 301),
+    ("staircase_dynamic9", 301),
 ]
-directory_string = "/home/hchoi/nas/dataset_4spp"
-dst_dir = "/home/hchoi/nas/bmfr_4spp"
+directory_string = "/home/hchoi/nas/dataset_nrd4"
+dst_dir = "/home/hchoi/nas/bmfr"
 
-# Based on SSIM loss and ~103 frames
+# Based on relL2/SSIM losses and ~101 frames
 bmfr_best_params = {
-    "data_Arcade": (4.0, 0.01),
-    "data_BistroExterior2": (0.25, 0.01),
-    "data_Classroom": (0.01, 0.04),
-    "data_Dining-room": (0.0016, 1.0),
-    "data_Dining-room-dynamic": (0.0016, 1.0),
-    "data_Staircase": (0.25, 0.0001),
+    # "BistroExteriorDoF": (0.25, 0.1),
+    # "BistroExterior2": (0.25, 0.1),
+    # "BistroExteriorDynamic": (0.01, 0.0001),
+    # "classroom": (0.0016, 0.25),
+    # "EmeraldSquare2": (0.25, 0.0001),
+    # "staircase": (0.01, 0.0001),
+    # "terrazzo-kitchen": (0.0016, 0.25),
+    # "musicroom22": (0.01, 0.0001),
+    "staircase_dynamic9": (0.01, 0.0001),
 }
 
 if __name__ == "__main__":

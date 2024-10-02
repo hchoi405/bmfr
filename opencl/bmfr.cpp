@@ -39,11 +39,11 @@
 #define IMAGE_WIDTH 1920
 #define IMAGE_HEIGHT 1080
 // TODO detect FRAME_COUNT from the input files
-#define FRAME_COUNT 101
+#define FRAME_COUNT 301
 // Flip y axis when calculating uv (for Falcor input data)
 #define FLIP_Y_FALCOR 1
 // Location where input frames and feature buffers are located
-#define INPUT_DATA_PATH /home/hchoi/nas/dataset_newscene/musicroom21
+#define INPUT_DATA_PATH /home/hchoi/nas/dataset_nrd4/staircase_dynamic9
 #define INPUT_DATA_PATH_STR STR(INPUT_DATA_PATH)
 // camera_matrices.h is expected to be in the same folder
 #include STR(INPUT_DATA_PATH/camera_matrices.h)

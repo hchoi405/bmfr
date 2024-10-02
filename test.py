@@ -18,7 +18,7 @@ scenes = [
     # ("BistroExteriorDynamic", 101),
     # ("EmeraldSquare2", 101),
     # ("classroom", 101),
-    ("musicroom21", 101),
+    # ("musicroom21", 101),
 ]
 TEST_COUNT = scenes[0][1]
 dataset_dir = "/home/hchoi/nas/dataset_newscene/"
